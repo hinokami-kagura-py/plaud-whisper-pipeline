@@ -105,8 +105,8 @@ def safe_stem(name: str) -> str:
     return name.replace(":", "").replace(" ", "_")
 
 
-def target_paths(raw_dir: Path, judgement_dir: Path, processed_date: str, name: str):
-    stem = f"{processed_date}_{safe_stem(name)}"
+def target_paths(raw_dir: Path, judgement_dir: Path, name: str):
+    stem = safe_stem(name)
     return raw_dir / f"{stem}.md", judgement_dir / f"{stem}_criteria.md"
 
 
@@ -222,11 +222,10 @@ def main():
         log(f"All-force mode: forcing reprocessing of all {len(recordings)} recordings", log_file)
 
     force = bool(args.file_id) or args.all_force
-    processed_date = datetime.now().strftime("%Y%m%d")
 
     pending = []
     for rec in recordings:
-        md_path, criteria_path = target_paths(raw_dir, judgement_dir, processed_date, rec["name"])
+        md_path, criteria_path = target_paths(raw_dir, judgement_dir, rec["name"])
         if force or needs_processing(md_path):
             pending.append((rec, md_path, criteria_path))
 
@@ -245,7 +244,7 @@ def main():
     for rec, md_path, criteria_path in pending:
         log(f"Processing {rec['id']} ({rec['name']}, {rec['duration']})...", log_file)
 
-        stem = f"{processed_date}_{safe_stem(rec['name'])}"
+        stem = safe_stem(rec['name'])
         audio_path = raw_dir / f"{stem}.mp3"
 
         if audio_path.exists():
