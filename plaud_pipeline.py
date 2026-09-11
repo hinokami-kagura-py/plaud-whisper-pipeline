@@ -247,9 +247,7 @@ def main():
         stem = safe_stem(rec['name'])
         audio_path = raw_dir / f"{stem}.mp3"
 
-        if audio_path.exists():
-            log(f"Audio already exists at {audio_path}, skipping download", log_file)
-        else:
+        if not audio_path.exists():
             url = get_audio_url(rec["id"], log_file)
             if not url:
                 continue
@@ -260,7 +258,9 @@ def main():
         log("Transcribing with Whisper...", log_file)
         text = transcribe(audio_path, model, args.language, log_file)
         if not text:
-            log(f"ERROR: empty transcript for {rec['id']}, skipping file generation", log_file)
+            log(f"No speech detected for {rec['id']} ({rec['name']}), marking as done to avoid retrying", log_file)
+            write_markdown(md_path, rec, "(no speech detected)", args.model)
+            write_criteria(criteria_path, rec, "(no speech detected)")
             continue
 
         write_markdown(md_path, rec, text, args.model)
